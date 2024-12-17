@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\decoder_a12.props" />
+</Project>
