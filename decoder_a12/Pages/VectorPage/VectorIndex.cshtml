@@ -1,0 +1,75 @@
+﻿@page
+@model decoder_a12.Pages.VectorPage.VectorIndexModel
+@{
+    ViewData["Title"] = "Vektoriaus siuntimas ir dekodavimas";
+}
+
+<h1>Vektoriaus siuntimas ir dekodavimas</h1>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
+}
+
+
+<form method="post">
+    <fieldset>
+        <legend>Parametrų įvedimas</legend>
+        <div>
+            <label for="n">Skaičių stulpelių kiekis (n):</label>
+            <input type="number" id="n" name="code.n" value="@Model.code.n" min="1" required />
+        </div>
+
+        <div>
+            <label for="k">Skaičių eilučių kiekis (k):</label>
+            <input type="number" id="k" name="code.k" value="@Model.code.k" min="1" required />
+        </div>
+
+        <div>
+            <label for="p">Klaidos tikimybė (p):</label>
+            <input type="number" id="p" name="code.p" step="0.0001" value="@Model.code.p" min="0" max="1" required />
+        </div>
+
+        <div>
+            <label for="m">Vektorius (m):</label>
+            <input type="text" id="m" name="MInput" value="@Model.MInput" required />
+        </div>
+
+        <div>
+            <label for="g">Įvesti generavimo matricą (G) (parašyti '-', jei norite generuoti):</label>
+            <textarea id="g" name="GInput" placeholder="1, 0, 0
+0, 1, 0
+0, 0, 1"
+                style="width: 200px; height: 100px;">@Model.GInput</textarea>
+        </div>
+
+        <button type="submit" name="action" value="generate">Pateikti</button>
+
+        <div>
+            <legend>Užkoduotas ir iš kanalo išėjęs vektorius</legend>
+            <p><strong>Užkoduotas vektorius (C):</strong> @string.Join("", Model.code.C)</p>
+        </div>
+
+        <div>
+            <strong>Iškraipytas vektorius (Y):</strong>
+            <p>Įvyko @Model.ErrorCount klaidos, pozicijose: @string.Join(", ", Model.ErrorsPositions)</p>
+                <textarea id="y" name="YInput">@Model.YInput</textarea>
+            </p>
+        </div>
+
+        <button type="submit" name="action" value="decode">Dekoduoti</button>
+    </fieldset>
+</form>
+
+
+<fieldset>
+    <legend>Dekoduotas vektorius</legend>
+    <p><strong>Dekoduotas vektorius:</strong> @string.Join(" ", Model.code.decoded)</p>
+</fieldset>
+
+

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using decoder_a12.Models;
+using System;
 
 namespace decoder_a12.Services;
 
@@ -62,4 +63,145 @@ public class MatrixCalculationsService
             Console.WriteLine(); // Nauja eilutė po kiekvienos eilutės
         }
     }
+
+    public int[,] GenerateMatrix(int rows, int cols)
+    {
+        var matrix = new int[rows, cols];
+        var random = new Random();
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                matrix[i, j] = random.Next(0, 2);
+            }
+        }
+        return matrix;
+    }
+
+    public int[,] GenerateLinearCodeMatrix(int rows, int cols)
+    {
+        if (cols <= rows)
+        {
+            throw new ArgumentException("Number of columns must be greater than rows for a valid generator matrix.");
+        }
+
+        int[,] matrix = new int[rows, cols];
+
+        // Step 1: Fill the left part with an identity matrix
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < rows; j++)
+            {
+                matrix[i, j] = (i == j) ? 1 : 0; // Identity matrix
+            }
+        }
+
+        // Step 2: Fill the right part with random binary values
+        Random random = new Random();
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = rows; j < cols; j++)
+            {
+                matrix[i, j] = random.Next(0, 2); // Random 0 or 1
+            }
+        }
+        return matrix;
+    }
+
+    public int[,] ParseMatrix(string input, int expectedRows, int expectedCols)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            throw new ArgumentException("Input cannot be null or empty.");
+        }
+
+        // Split the input into lines
+        var lines = input.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length == 0)
+        {
+            throw new ArgumentException("Input must contain at least one row.");
+        }
+
+        if (lines.Length != expectedRows)
+        {
+            throw new ArgumentException($"Number of rows ({lines.Length}) does not match the expected value ({expectedRows}).");
+        }
+
+        // Parse the first line to determine the number of columns
+        var firstRow = lines[0].Split(new[] { ',' }, StringSplitOptions.TrimEntries);
+        int cols = firstRow.Length;
+
+        if (cols == 0)
+        {
+            throw new ArgumentException("Each row must contain at least one column.");
+        }
+
+        if (cols != expectedCols)
+        {
+            throw new ArgumentException($"Number of columns ({cols}) does not match the expected value ({expectedCols}).");
+        }
+
+        // Create the matrix
+        int[,] matrix = new int[lines.Length, cols];
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var row = lines[i].Split(new[] { ',' }, StringSplitOptions.TrimEntries);
+
+            if (row.Length != cols)
+            {
+                throw new ArgumentException("All rows must have the same number of columns.");
+            }
+
+            for (int j = 0; j < row.Length; j++)
+            {
+                if (!int.TryParse(row[j], out int value))
+                {
+                    throw new ArgumentException($"Invalid integer value at row {i + 1}, column {j + 1}: '{row[j]}'.");
+                }
+
+                matrix[i, j] = value;
+            }
+        }
+
+        return matrix;
+    }
+
+    public int[,] CloneMatrix(int[,] originalMatrix)
+    {
+        if (originalMatrix == null)
+        {
+            return null;
+        }
+
+        int rows = originalMatrix.GetLength(0);
+        int cols = originalMatrix.GetLength(1);
+        int[,] newMatrix = new int[rows, cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                newMatrix[i, j] = originalMatrix[i, j];
+            }
+        }
+
+        return newMatrix;
+    }
+
+    public int[] CloneVector(int[] originalVector)
+    {
+        if (originalVector == null)
+        {
+            return null;
+        }
+
+        // Create a new array and copy the elements from the original vector
+        int[] clonedVector = new int[originalVector.Length];
+        Array.Copy(originalVector, clonedVector, originalVector.Length);
+
+        return clonedVector;
+    }
+
 }

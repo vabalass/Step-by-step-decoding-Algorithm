@@ -1,4 +1,5 @@
 using decoder_a12.Models;
+using decoder_a12.Testing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-CodeTester tester = new CodeTester();
-tester.Run();
+StringCodeTester tester = new StringCodeTester();
+tester.RunFullTest();
 
 app.Run();

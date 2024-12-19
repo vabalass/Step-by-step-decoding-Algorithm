@@ -1,8 +1,13 @@
-﻿namespace decoder_a12.Models;
+﻿using decoder_a12.Services;
+
+namespace decoder_a12.Models;
 
 public class Code
 {
     public int[] m {  get; set; } // pradinis vektorius
+    public int[] y { get; set; } // sugrįžęs vektorius
+
+    public int[] decoded { get; set; } = { 0 }; // dekoduotas vektorius
     public int n { get; set; } // stulpeliai
     public int k { get; set; } // eilutės
 
@@ -14,10 +19,23 @@ public class Code
 
     public int[,]? H {  get; set; } // kontrolinė matrica 
 
-    public Code(int rows, int columns)
+    public Code()
     {
+        MatrixCalculationsService matrixCalculationsService = new MatrixCalculationsService();
+        k = 2;
+        n = 5;
+        G = matrixCalculationsService.GenerateLinearCodeMatrix(k, n);
+        m = [1, 0];
+        y = [1, 0];
+        C = matrixCalculationsService.MultiplyMatrixByVector(G, m);
+        p = 0;
+    }
+    public Code(int rows, int columns, double probability)
+    {
+        MatrixCalculationsService matrixCalculationsService = new MatrixCalculationsService();
         k = rows;
         n = columns;
+        p = probability;
         G = new int[k, n];
         m = new int[k];
     }
@@ -28,13 +46,46 @@ public class Code
             throw new ArgumentException("Klaida: matricos išmatavimai neatitinka!");
         }
 
-        for (int i = 0; i < k; i++)
+        G = values;
+
+        // Check if G is a linear code generator matrix
+        if (!IsLinearCodeMatrix(G))
         {
-            for (int j = 0; j < n; j++)
+            throw new ArgumentException("Matrix G is not a valid linear code generator matrix.");
+        }
+    }
+
+    private bool IsLinearCodeMatrix(int[,] matrix)
+    {
+        int rows = matrix.GetLength(0);
+        int cols = matrix.GetLength(1);
+
+        // Check if the rows are linearly independent
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = i + 1; j < rows; j++)
             {
-                G[i, j] = values[i, j];
+                if (AreRowsLinearlyDependent(matrix, i, j, cols))
+                {
+                    return false;
+                }
             }
         }
+
+        return true;
+    }
+
+    private bool AreRowsLinearlyDependent(int[,] matrix, int row1, int row2, int cols)
+    {
+        for (int k = 0; k < cols; k++)
+        {
+            if (matrix[row1, k] != matrix[row2, k])
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void PrintG()
@@ -49,10 +100,16 @@ public class Code
         }
     }
 
+    public void PrintVector(int[] vector)
+    {
+        Console.WriteLine(string.Join(" ", vector));
+    }
+
     public void GenerateH()
     {
         int pRows = k; // G eilutės
         int pCols = n - k; // G papildomi stulpeliai
+        Console.WriteLine($"pRows = {pRows}, pCols = {pCols}");
 
         // Patikriname, ar G turi pakankamai stulpelių (n > k)
         if (pCols <= 0)
@@ -74,7 +131,7 @@ public class Code
             }
         }
 
-        // Sukuriame vienetinę matricą I_{n-k}
+        // Sukuriame vienetinę matricą I{n-k}
         for (int i = 0; i < pCols; i++)
         {
             for (int j = 0; j < pCols; j++)
@@ -83,7 +140,7 @@ public class Code
             }
         }
 
-        // Sukuriame H = [P^T | I_{n-k}]
+        // Sukuriame H = [P^T | I{n-k}]
         H = new int[pCols, n];
         for (int i = 0; i < pCols; i++)
         {
@@ -93,7 +150,7 @@ public class Code
             }
             for (int j = 0; j < pCols; j++)
             {
-                H[i, pRows + j] = identity[i, j]; // Identity dalis
+                H[i, pRows + j] = identity[i, j]; // I dalis
             }
         }
     }
